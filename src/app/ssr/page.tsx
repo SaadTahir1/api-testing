@@ -1,18 +1,25 @@
-import { Key, ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedReactNode } from "react";
+import React from "react";
 
-export async function getServerSideProps() {
-  const res = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=5');
-  const posts = await res.json();
+async function getPosts() {
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5", {
+    cache: "no-store", // Ensures SSR behavior
+  });
 
-  return { props: { posts } };
+  if (!res.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+
+  return res.json();
 }
 
-export default function SSRPage({ posts }: { posts: any }) {
+export default async function SSRPage() {
+  const posts = await getPosts();
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">SSR - Server Side Rendered Posts</h1>
       <ul className="space-y-3">
-        {posts.map((post: { id: Key | null | undefined; title: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; body: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) => (
+        {posts.map((post: { id: number; title: string; body: string }) => (
           <li key={post.id} className="border p-3 rounded-md shadow">
             <h2 className="text-lg font-semibold">{post.title}</h2>
             <p>{post.body}</p>
